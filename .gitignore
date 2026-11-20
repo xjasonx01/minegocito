@@ -1,0 +1,21 @@
+# Dependencias (nunca se suben)
+node_modules
+
+# Build de Next.js
+/.next/
+/out/
+/build
+
+# Variables de entorno: el .env real NUNCA se sube
+.env
+.env.*
+!.env.example
+
+# Logs y archivos generados
+*.log
+*.tsbuildinfo
+next-env.d.ts
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
