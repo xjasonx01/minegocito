@@ -89,47 +89,6 @@ panel extrae las coordenadas automáticamente.
 - Prisma ORM + PostgreSQL (Neon) en producción / SQLite en desarrollo local
 - Sesiones firmadas con HMAC separadas para desarrollador y dueños
 
-## Arranque rápido en Render
-
-La guía completa paso a paso está en el PDF "Guía de despliegue". Resumen:
-
-1. Crea la base de datos gratuita en [neon.tech](https://neon.tech) y copia la
-   cadena de conexión (`postgresql://...`).
-2. Sube este proyecto a un repositorio en [github.com](https://github.com).
-   Puedes hacerlo sin comandos git: crea el repositorio y arrastra los
-   archivos de esta carpeta en el navegador (GitHub acepta hasta 100 archivos
-   por arrastre, así que sube primero `prisma` y `public` y los archivos
-   sueltos, y luego `src` en dos tandas). Nunca subas la carpeta
-   `node_modules` ni el archivo `.env`; el `.gitignore` y el `.env.example`
-   incluidos ya lo evitan si usas git o GitHub Desktop.
-3. En [render.com](https://render.com) crea un **Web Service** conectado al
-   repositorio y configura:
-   - **Build Command**: `npm install && npx prisma db push && npm run build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/`
-   - **Start Command**: `npm run start`
-   - **Variable de entorno**: `DATABASE_URL` con la cadena de Neon (y,
-     opcionalmente, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`).
-4. Abre tu URL `*.onrender.com`: el contenido de ejemplo se siembra solo en el
-   primer arranque.
-
-## Desarrollador por defecto
-
-- Correo: `admin@minegocito.cu` (o el valor de `ADMIN_EMAIL`)
-- Contraseña: `Minegocito2026` (o el valor de `ADMIN_PASSWORD`)
-
-Entra a `/#/desarrollador` y **cámbiala en Ajustes → Cambiar contraseña**.
-
-## Desarrollo local (SQLite)
-
-```bash
-cp .env.example .env              # usa DATABASE_URL=file:./db/custom.db
-npm install
-npm run db:push                   # aplica prisma/schema.sqlite.prisma
-npm run dev                       # http://localhost:3000
-```
-
-En producción (PostgreSQL/Neon) los esquemas se aplican con
-`npx prisma db push` (Render lo hace en el Build Command) o
-`npm run db:push:pg`.
 
 ## Estructura
 
