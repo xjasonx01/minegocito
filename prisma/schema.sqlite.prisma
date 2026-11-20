@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  name      String
+  nameEn    String?
+  icon      String?
+  sortOrder Int        @default(0)
+  active    Boolean    @default(true)
+  businesses Business[]
+}
+
+model Province {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  name           String
+  nameEn         String?
+  sortOrder      Int            @default(0)
+  active         Boolean        @default(true)
+  municipalities Municipality[]
+}
+
+model Municipality {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  nameEn     String?
+  provinceId String
+  sortOrder  Int        @default(0)
+  active     Boolean    @default(true)
+
+  province   Province   @relation(fields: [provinceId], references: [id])
+  businesses Business[]
+}
+
+model OwnerUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  businessId   String?   @unique
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+}
+
+model Business {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  nameEn        String?
+  description   String
+  descriptionEn String?
+  categoryId    String
+  municipalityId String
+  address       String?
+  phone         String?
+  whatsapp      String?
+  email         String?
+  website       String?
+  instagram     String?
+  facebook      String?
+  hours         String?
+  coverUrl      String?
+  lat           Float?
+  lng           Float?
+  rating        Float    @default(4.5)
+  featured      Boolean  @default(false)
+  delivery      Boolean  @default(false)
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  municipality Municipality @relation(fields: [municipalityId], references: [id])
+  products Product[]
+  owner    OwnerUser?
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  businessId    String
+  name          String
+  nameEn        String?
+  description   String?
+  descriptionEn String?
+  price         Float
+  imageUrl      String?
+  sortOrder     Int      @default(0)
+  active        Boolean  @default(true)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String
+  message   String
+  kind      String   @default("general")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
