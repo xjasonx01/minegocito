@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "NODE_ENV=production node .next/standalone/server.js",
-    "postinstall": "prisma generate --schema prisma/schema.sqlite.prisma",
+    "postbuild": "node scripts/prepare-standalone.js",
+    "start": "NODE_ENV=production HOSTNAME=0.0.0.0 node .next/standalone/server.js",
+    "postinstall": "node scripts/prisma-postinstall.js",
     "lint": "eslint .",
     "db:push": "prisma db push --schema prisma/schema.sqlite.prisma --accept-data-loss",
     "db:generate": "prisma generate --schema prisma/schema.sqlite.prisma",
@@ -95,5 +96,15 @@
   "description": "Minegocito — Directorio de negocios y catálogos digitales",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "@swc/core@1.16.22": true,
+    "es5-ext@0.10.64": true,
+    "prisma@6.19.3": true,
+    "sharp@0.35.5": true,
+    "sharp@0.34.5": true
   }
 }
