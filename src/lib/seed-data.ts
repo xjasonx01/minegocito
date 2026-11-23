@@ -33,7 +33,7 @@ export const IMG = {
 // Datos de contacto del desarrollador (los dueños de negocio lo contactan
 // por estos canales para solicitar su acceso). Telegram va sin la @.
 export const DEVELOPER = {
-  email: 'minegocito@gmail.com',
+  email: 'minegocitoCuba@gmail.com',
   phone: '+53 56098552',
   telegram: 'jasonmh03',
 }
