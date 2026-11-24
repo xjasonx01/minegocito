@@ -4,18 +4,24 @@
 // Renderiza la luna hasta montar en el cliente para evitar desajustes de
 // hidratación con el tema resuelto por next-themes.
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { useLang } from '@/lib/lang-context'
 
+// Detecta si ya estamos en el cliente sin setState en useEffect:
+// - snapshot del servidor: false (misma salida que el SSR, sin desajuste)
+// - snapshot del cliente: true
+const emptySubscribe = () => () => {}
+function useMounted() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false)
+}
+
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
   const { lang } = useLang()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  const mounted = useMounted()
 
   const isDark = mounted && resolvedTheme === 'dark'
   const label = isDark
