@@ -242,7 +242,7 @@ const en: Dict = {
   // Map
   mapTitle: 'Location',
   openInMaps: 'Open in Google Maps',
-  seeOnMaps: 'See in Google Maps',
+  seeOnMaps: 'See on Google Maps',
   mapHint: 'Tap the map to open the exact location in Google Maps.',
   coordinates: 'Coordinates (optional)',
   coordinatesPh: 'E.g.: 23.1136, -82.3666',
