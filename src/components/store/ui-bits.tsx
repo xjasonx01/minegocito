@@ -87,7 +87,7 @@ export function BusinessCard({ business, onOpen }: { business: Business; onOpen:
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {business.coverUrl ? (
-          
+           
           <img
             src={business.coverUrl}
             alt={business.name}
