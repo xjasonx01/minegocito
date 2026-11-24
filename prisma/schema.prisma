@@ -78,6 +78,8 @@ model Business {
   address       String?
   phone         String?
   whatsapp      String?
+  whatsappGroup String?
+  telegramGroup String?
   email         String?
   website       String?
   instagram     String?

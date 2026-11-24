@@ -234,7 +234,7 @@ function OwnerDashboard({
 
       {!business ? (
         <>
-          <Card className="mt-6 border-amber-200 bg-amber-50/60">
+          <Card className="mt-6 border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/30">
             <CardContent className="flex items-start gap-3 p-5">
               <Store className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <p className="text-sm leading-relaxed">{t('ownerNoBusiness')}</p>
@@ -329,7 +329,7 @@ function OwnerDashboard({
                     <Button variant="outline" size="sm" onClick={() => setProductDialog({ open: true, editing: p })} aria-label={t('edit')}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setDeleteProduct(p)} aria-label={t('delete')}>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400" onClick={() => setDeleteProduct(p)} aria-label={t('delete')}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -405,6 +405,8 @@ function BusinessForm({
     website: business?.website ?? '',
     instagram: business?.instagram ?? '',
     facebook: business?.facebook ?? '',
+    whatsappGroup: business?.whatsappGroup ?? '',
+    telegramGroup: business?.telegramGroup ?? '',
     hours: business?.hours ?? '',
     coverUrl: business?.coverUrl ?? '',
     delivery: business?.delivery ?? false,
@@ -570,6 +572,24 @@ function BusinessForm({
               <div className="space-y-1.5">
                 <Label htmlFor="biz-fb">{t('bizFacebook')}</Label>
                 <Input id="biz-fb" placeholder="facebook.com/..." value={form.facebook} onChange={(e) => setForm({ ...form, facebook: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="biz-wa-group">{t('bizWhatsappGroup')}</Label>
+                <Input
+                  id="biz-wa-group"
+                  placeholder="https://chat.whatsapp.com/..."
+                  value={form.whatsappGroup}
+                  onChange={(e) => setForm({ ...form, whatsappGroup: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="biz-tg-group">{t('bizTelegramGroup')}</Label>
+                <Input
+                  id="biz-tg-group"
+                  placeholder="https://t.me/... o @usuario"
+                  value={form.telegramGroup}
+                  onChange={(e) => setForm({ ...form, telegramGroup: e.target.value })}
+                />
               </div>
             </div>
           </div>

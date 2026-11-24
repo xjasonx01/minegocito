@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Loader2, Mail, MessageCircle, PlusCircle, Send, Store } from 'lucide-react'
+import { Loader2, MessageCircle, PlusCircle, Send, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { LangProvider, useLang } from '@/lib/lang-context'
@@ -12,7 +12,12 @@ import { BusinessView } from '@/components/store/business-view'
 import { JoinView } from '@/components/store/join-view'
 import { OwnerView } from '@/components/store/owner-view'
 import { DevView } from '@/components/store/dev-view'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { type PublicData } from '@/components/store/types'
+
+// Enlaces oficiales de Minegocito para el pie de página.
+const OFFICIAL_WHATSAPP = 'https://whatsapp.com/channel/0029Vb92Ci0KbYMVwxvPHO07'
+const OFFICIAL_TELEGRAM = 'https://t.me/minegocitoCuba'
 
 export default function Page() {
   return (
@@ -91,10 +96,11 @@ function AppShell() {
             <Button variant="ghost" size="sm" onClick={() => setLang(lang === 'es' ? 'en' : 'es')} aria-label="Language">
               {t('langLabel')}
             </Button>
+            <ThemeToggle />
             <Button
               variant="outline"
               size="sm"
-              className="border-amber-600 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+              className="border-amber-600 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:text-amber-400 dark:hover:bg-amber-950/40 dark:hover:text-amber-300"
               onClick={() => navigate({ view: 'join' })}
             >
               <PlusCircle className="h-4 w-4 sm:mr-1.5" />
@@ -162,47 +168,32 @@ function AppShell() {
               <p className="text-sm text-muted-foreground">{t('footerText')}</p>
             </div>
             <div className="text-sm text-muted-foreground">
-              {/* Solo los iconos de cada aplicación de contacto, cada uno con
-                  su hipervínculo (WhatsApp, Telegram y correo). */}
+              {/* Enlaces oficiales de Minegocito (canal de WhatsApp y Telegram). */}
               <div className="flex items-center gap-2.5">
-                {data?.settings.contactPhone && (
-                  <a
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition-colors hover:bg-emerald-700"
-                    href={`https://wa.me/${data.settings.contactPhone.replace(/[^0-9]/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="WhatsApp"
-                    title="WhatsApp"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                  </a>
-                )}
-                {data?.settings.telegram && (
-                  <a
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-600 text-white shadow-sm transition-colors hover:bg-sky-700"
-                    href={`https://t.me/${data.settings.telegram.replace(/^@/, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Telegram"
-                    title="Telegram"
-                  >
-                    <Send className="h-5 w-5" />
-                  </a>
-                )}
-                {data?.settings.contactEmail && (
-                  <a
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 text-white shadow-sm transition-colors hover:bg-amber-700"
-                    href={`mailto:${data.settings.contactEmail}`}
-                    aria-label={lang === 'en' ? 'Email' : 'Correo'}
-                    title={lang === 'en' ? 'Email' : 'Correo'}
-                  >
-                    <Mail className="h-5 w-5" />
-                  </a>
-                )}
+                <a
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm transition-colors hover:bg-emerald-700"
+                  href={OFFICIAL_WHATSAPP}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                  title="WhatsApp"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                </a>
+                <a
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-600 text-white shadow-sm transition-colors hover:bg-sky-700"
+                  href={OFFICIAL_TELEGRAM}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Telegram"
+                  title="Telegram"
+                >
+                  <Send className="h-5 w-5" />
+                </a>
               </div>
               <button
                 type="button"
-                className="mt-2 font-medium text-amber-600 hover:text-amber-700 hover:underline"
+                className="mt-2 font-medium text-amber-600 hover:text-amber-700 hover:underline dark:text-amber-400 dark:hover:text-amber-300"
                 onClick={() => navigate({ view: 'join' })}
               >
                 {t('publishCta')}

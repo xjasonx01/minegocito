@@ -86,7 +86,7 @@ export function JoinView({ siteName, settings }: Props) {
                 <span className="absolute right-4 top-3 text-5xl font-black text-amber-500/10" aria-hidden>
                   {i + 1}
                 </span>
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/60">
                   <s.icon className="h-5.5 w-5.5 text-amber-600" />
                 </div>
                 <h2 className="mt-3 font-bold">{s.title}</h2>
@@ -99,7 +99,7 @@ export function JoinView({ siteName, settings }: Props) {
 
       {/* Contacto directo con el desarrollador */}
       <section className="mx-auto w-full max-w-6xl px-4 pb-10">
-        <Card className="border-amber-200 bg-amber-50/60">
+        <Card className="border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/30">
           <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center">
             <div className="flex-1">
               <h2 className="flex items-center gap-2 font-bold">
@@ -110,7 +110,7 @@ export function JoinView({ siteName, settings }: Props) {
                 {devEmail && (
                   <>
                     {' '}
-                    <a className="font-medium text-amber-700 underline underline-offset-2" href={`mailto:${devEmail}`}>
+                    <a className="font-medium text-amber-700 underline underline-offset-2 dark:text-amber-400" href={`mailto:${devEmail}`}>
                       {devEmail}
                     </a>
                   </>

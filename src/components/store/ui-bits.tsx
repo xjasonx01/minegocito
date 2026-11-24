@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   UtensilsCrossed, Coffee, Croissant, Pizza, Shirt, Scissors, Hammer, PawPrint,
   IceCreamCone, Gift, Store, Star, MapPin, Truck, Crown, Phone, Clock, Package,
-  BedDouble, CarTaxiFront, Cpu, Armchair, Wrench, PartyPopper,
+  BedDouble, CarTaxiFront, Cpu, Armchair, Wrench, PartyPopper, MessageCircle, Send,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -156,10 +156,32 @@ export function ContactButtons({ business }: { business: Business }) {
           </a>
         </Button>
       )}
+      {business.whatsappGroup && (
+        <Button
+          asChild
+          variant="outline"
+          className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
+        >
+          <a href={business.whatsappGroup} target="_blank" rel="noopener noreferrer">
+            <MessageCircle className="mr-2 h-4 w-4" /> {t('whatsappGroup')}
+          </a>
+        </Button>
+      )}
       {business.phone && (
         <Button asChild variant="outline">
           <a href={`tel:${business.phone.replace(/\s/g, '')}`}>
             <Phone className="mr-2 h-4 w-4" /> {t('call')}
+          </a>
+        </Button>
+      )}
+      {business.telegramGroup && (
+        <Button
+          asChild
+          variant="outline"
+          className="border-sky-600 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:text-sky-400 dark:hover:bg-sky-950/40 dark:hover:text-sky-300"
+        >
+          <a href={business.telegramGroup} target="_blank" rel="noopener noreferrer">
+            <Send className="mr-2 h-4 w-4" /> {t('telegramGroup')}
           </a>
         </Button>
       )}
@@ -190,7 +212,7 @@ export function InfoRow({
             href={href}
             target={external ? '_blank' : undefined}
             rel={external ? 'noopener noreferrer' : undefined}
-            className="break-all text-amber-700 hover:text-amber-800 hover:underline"
+            className="break-all text-amber-700 hover:text-amber-800 hover:underline dark:text-amber-400 dark:hover:text-amber-300"
           >
             {value}
           </a>

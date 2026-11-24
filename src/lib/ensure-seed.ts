@@ -6,6 +6,8 @@
 //    referencia (provincias, municipios, categorías) se sincronizan SIEMPRE
 //    con upserts/creaciones puntuales: al desplegar una versión nueva, las
 //    provincias, municipios y categorías añadidos aparecen solos.
+//  - Las columnas nuevas del modelo Business se añaden de forma idempotente
+//    (ver ensureBusinessColumns), sin pasos manuales de migración.
 //  - Negocios y productos de ejemplo se siembran solo si no hay ninguno.
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
@@ -29,7 +31,36 @@ export function ensureSeed(): Promise<void> {
   return seedPromise
 }
 
+// El esquema evoluciona entre versiones: las columnas nuevas del modelo
+// Business se añaden aquí de forma idempotente para que el despliegue
+// (Render/Neon) no necesite pasos manuales de migración.
+async function ensureBusinessColumns() {
+  const url = process.env.DATABASE_URL || ''
+  const isPostgres = /^postgres(ql)?:\/\//i.test(url)
+  const columns: Array<[string, string]> = [
+    ['whatsappGroup', 'TEXT'],
+    ['telegramGroup', 'TEXT'],
+  ]
+  for (const [name, type] of columns) {
+    if (isPostgres) {
+      // Postgres admite IF NOT EXISTS: no falla si la columna ya existe.
+      await db.$executeRawUnsafe(`ALTER TABLE "Business" ADD COLUMN IF NOT EXISTS "${name}" ${type}`)
+    } else {
+      // SQLite no admite IF NOT EXISTS: se ignora el error de columna duplicada.
+      try {
+        await db.$executeRawUnsafe(`ALTER TABLE "Business" ADD COLUMN "${name}" ${type}`)
+      } catch (e) {
+        const msg = String((e as { message?: string })?.message || e)
+        if (!msg.toLowerCase().includes('duplicate column')) throw e
+      }
+    }
+  }
+}
+
 async function doSeed() {
+  // Columnas nuevas antes de usar el modelo Business.
+  await ensureBusinessColumns()
+
   // Ajustes del sitio: se sincronizan SIEMPRE (aunque la base ya tenga datos)
   // para que el correo, WhatsApp y Telegram del desarrollador estén al día.
   for (const [key, value] of Object.entries(SETTINGS)) {

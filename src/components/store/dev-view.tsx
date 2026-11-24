@@ -169,7 +169,7 @@ export function DevView() {
           ].map(({ label, value, sub, Icon }) => (
             <Card key={label}>
               <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/60">
                   <Icon className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
@@ -332,7 +332,7 @@ function MessagesTab({
       <div className="max-h-[36rem] space-y-3 overflow-y-auto rounded-lg pr-1">
         {messages.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">{t('noMessages')}</p>}
         {messages.map((m) => (
-          <Card key={m.id} className={m.read ? '' : 'border-amber-300 bg-amber-50/50'}>
+          <Card key={m.id} className={m.read ? '' : 'border-amber-300 bg-amber-50/50 dark:border-amber-900/60 dark:bg-amber-950/30'}>
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-2">
                 {!m.read && <Badge className="bg-red-600 text-white hover:bg-red-600">{t('unread')}</Badge>}
@@ -354,7 +354,7 @@ function MessagesTab({
                     {t('markRead')}
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => onDelete(m.id, m.name)}>
+                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400" onClick={() => onDelete(m.id, m.name)}>
                   <Trash2 className="mr-1.5 h-4 w-4" /> {t('delete')}
                 </Button>
               </div>
@@ -414,7 +414,7 @@ function BusinessesTab({
                 <label className="flex items-center gap-2 text-xs font-medium">
                   <Switch checked={b.featured} onCheckedChange={(v) => void patch(b.id, { featured: v })} /> <Crown className="h-3.5 w-3.5 text-amber-600" />
                 </label>
-                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => onDelete(b)}>
+                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400" onClick={() => onDelete(b)}>
                   <Trash2 className="mr-1.5 h-4 w-4" /> {t('delete')}
                 </Button>
               </div>
@@ -483,7 +483,7 @@ function OwnersTab({
                 <Button variant="outline" size="sm" onClick={() => void toggle(o)}>
                   {o.active ? t('deactivate') : t('activate')}
                 </Button>
-                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => onDelete(o)}>
+                <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400" onClick={() => onDelete(o)}>
                   <Trash2 className="mr-1.5 h-4 w-4" /> {t('delete')}
                 </Button>
               </div>

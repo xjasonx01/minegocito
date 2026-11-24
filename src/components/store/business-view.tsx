@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Clock, Globe, Instagram, Mail, MapPin, Package, Phone, Facebook } from 'lucide-react'
+import { ArrowLeft, Clock, Globe, Instagram, Mail, MapPin, MessageCircle, Package, Phone, Facebook, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,7 +18,8 @@ export function BusinessView({ business, onBack }: Props) {
   const { lang, t } = useLang()
 
   const hasContactInfo = !!(business.address || business.phone || business.hours || business.email ||
-    business.website || business.instagram || business.facebook)
+    business.website || business.instagram || business.facebook ||
+    business.whatsappGroup || business.telegramGroup)
   const hasMap = !!(business.address || (typeof business.lat === 'number' && typeof business.lng === 'number'))
 
   return (
@@ -107,6 +108,24 @@ export function BusinessView({ business, onBack }: Props) {
                   label={t('bizFacebook')}
                   value={business.facebook.replace(/^https?:\/\/(www\.)?/, '')}
                   href={business.facebook.startsWith('http') ? business.facebook : `https://facebook.com/${business.facebook}`}
+                  external
+                />
+              )}
+              {business.whatsappGroup && (
+                <InfoRow
+                  icon={MessageCircle}
+                  label={t('whatsappGroup')}
+                  value={t('joinGroup')}
+                  href={business.whatsappGroup}
+                  external
+                />
+              )}
+              {business.telegramGroup && (
+                <InfoRow
+                  icon={Send}
+                  label={t('telegramGroup')}
+                  value={t('joinGroup')}
+                  href={business.telegramGroup}
                   external
                 />
               )}
