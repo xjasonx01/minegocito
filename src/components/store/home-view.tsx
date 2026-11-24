@@ -135,9 +135,9 @@ function PublishCta() {
   const { t } = useLang()
   return (
     <section className="border-t bg-muted/40 px-4 py-10">
-      <Card className="mx-auto max-w-2xl border-amber-200">
+      <Card className="mx-auto max-w-2xl border-amber-200 dark:border-amber-900/60">
         <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/60">
             <Store className="h-6 w-6 text-amber-600" />
           </div>
           <div>
