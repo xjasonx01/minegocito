@@ -65,6 +65,8 @@ export type Business = {
   website: string | null
   instagram: string | null
   facebook: string | null
+  whatsappGroup: string | null
+  telegramGroup: string | null
   hours: string | null
   coverUrl: string | null
   lat: number | null

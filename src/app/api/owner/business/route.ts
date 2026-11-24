@@ -20,6 +20,8 @@ const OWNER_FIELDS = [
   'website',
   'instagram',
   'facebook',
+  'whatsappGroup',
+  'telegramGroup',
   'hours',
   'coverUrl',
   'lat',
@@ -42,6 +44,15 @@ function parseCoord(v: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+// Normaliza el enlace de un grupo: acepta una URL completa, un @usuario de
+// Telegram o un código de invitación, y devuelve siempre la URL lista para usar.
+function normalizeGroupUrl(v: unknown, base: string, max = 300): string | null {
+  const s = cleanText(v, max)
+  if (!s) return null
+  if (/^https?:\/\//i.test(s)) return s
+  return base + s.replace(/^@/, '').replace(/^\//, '')
+}
+
 function buildData(body: Record<string, unknown>): Record<string, unknown> {
   const data: Record<string, unknown> = {}
   if (body.name !== undefined) data.name = cleanText(body.name, 120)
@@ -55,6 +66,8 @@ function buildData(body: Record<string, unknown>): Record<string, unknown> {
   if (body.website !== undefined) data.website = optional(body.website, 300)
   if (body.instagram !== undefined) data.instagram = optional(String(body.instagram).replace(/^@/, ''), 60)
   if (body.facebook !== undefined) data.facebook = optional(body.facebook, 200)
+  if (body.whatsappGroup !== undefined) data.whatsappGroup = normalizeGroupUrl(body.whatsappGroup, 'https://chat.whatsapp.com/')
+  if (body.telegramGroup !== undefined) data.telegramGroup = normalizeGroupUrl(body.telegramGroup, 'https://t.me/')
   if (body.hours !== undefined) data.hours = optional(body.hours, 500)
   if (body.coverUrl !== undefined) data.coverUrl = optional(body.coverUrl, 500_000)
   if (body.lat !== undefined) data.lat = parseCoord(body.lat)
@@ -105,6 +118,8 @@ export async function POST(req: NextRequest) {
         website: data.website as string | null,
         instagram: data.instagram as string | null,
         facebook: data.facebook as string | null,
+        whatsappGroup: data.whatsappGroup as string | null,
+        telegramGroup: data.telegramGroup as string | null,
         hours: data.hours as string | null,
         coverUrl: data.coverUrl as string | null,
         lat: data.lat as number | null,
