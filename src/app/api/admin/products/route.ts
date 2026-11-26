@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'missing_fields' }, { status: 400 })
     }
     const count = await db.product.count({ where: { businessId } })
+    const stockRaw = body.stock
+    const stockN = Math.round(Number(stockRaw))
     const product = await db.product.create({
       data: {
         businessId,
@@ -24,6 +26,7 @@ export async function POST(req: NextRequest) {
         description: String(body.description || '').trim() || null,
         descriptionEn: String(body.descriptionEn || '').trim() || null,
         price,
+        stock: stockRaw === null || stockRaw === undefined || stockRaw === '' || !Number.isFinite(stockN) || stockN < 1 ? null : stockN,
         imageUrl: String(body.imageUrl || '').trim() || null,
         sortOrder: count + 1,
         active: body.active !== false,

@@ -41,14 +41,20 @@ async function ensureBusinessColumns() {
     ['whatsappGroup', 'TEXT'],
     ['telegramGroup', 'TEXT'],
   ]
+  await ensureColumns('Business', columns, isPostgres)
+  // Stock de productos (null = producto único, se compra 1 sola vez).
+  await ensureColumns('Product', [['stock', 'INTEGER']], isPostgres)
+}
+
+async function ensureColumns(table: string, columns: Array<[string, string]>, isPostgres: boolean) {
   for (const [name, type] of columns) {
     if (isPostgres) {
       // Postgres admite IF NOT EXISTS: no falla si la columna ya existe.
-      await db.$executeRawUnsafe(`ALTER TABLE "Business" ADD COLUMN IF NOT EXISTS "${name}" ${type}`)
+      await db.$executeRawUnsafe(`ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "${name}" ${type}`)
     } else {
       // SQLite no admite IF NOT EXISTS: se ignora el error de columna duplicada.
       try {
-        await db.$executeRawUnsafe(`ALTER TABLE "Business" ADD COLUMN "${name}" ${type}`)
+        await db.$executeRawUnsafe(`ALTER TABLE "${table}" ADD COLUMN "${name}" ${type}`)
       } catch (e) {
         const msg = String((e as { message?: string })?.message || e)
         if (!msg.toLowerCase().includes('duplicate column')) throw e

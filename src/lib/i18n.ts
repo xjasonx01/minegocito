@@ -66,6 +66,16 @@ const es = {
   cartClose: 'Cerrar',
   orderSentTitle: '¡Pedido preparado en WhatsApp!',
   orderSentText: 'Se abrió WhatsApp con la lista de tu pedido para que se la envíes al dueño. Si no se abrió, revisa que el navegador permita ventanas emergentes. El dueño te responderá para concretar la entrega y el pago.',
+  // Stock de productos
+  stockUnique: 'Producto único',
+  stockUniqueHint: 'Se puede comprar una sola vez',
+  stockAvailableLabel: 'Disponibles',
+  stockRemaining: 'Restantes',
+  stockMaxReached: 'Máximo alcanzado',
+  // Stock en el panel del dueño
+  ownerStockLabel: 'Cantidad disponible (opcional)',
+  ownerStockPh: 'Ej.: 10 (vacío = compra única)',
+  ownerStockHint: 'Si lo dejas vacío, el producto se podrá comprar una sola vez (ej.: una casa). Si tienes varias unidades (ej.: dulces o piezas), escribe cuántas puedes vender.',
   // Publicar tu negocio
   publishCta: 'Publica tu negocio',
   joinHeroTag: 'Tu negocio, su catálogo y su ubicación en un solo lugar',
@@ -266,6 +276,16 @@ const en: Dict = {
   cartClose: 'Close',
   orderSentTitle: 'Order ready in WhatsApp!',
   orderSentText: 'WhatsApp opened with your order list so you can send it to the owner. If it did not open, check that the browser allows pop-ups. The owner will reply to arrange delivery and payment.',
+  // Product stock
+  stockUnique: 'One-of-a-kind item',
+  stockUniqueHint: 'It can only be bought once',
+  stockAvailableLabel: 'Available',
+  stockRemaining: 'Remaining',
+  stockMaxReached: 'Max reached',
+  // Stock in the owner panel
+  ownerStockLabel: 'Available quantity (optional)',
+  ownerStockPh: 'E.g.: 10 (empty = single purchase)',
+  ownerStockHint: 'Leave it empty and the product can be bought only once (e.g. a house). If you have several units (e.g. candies or parts), enter how many you can sell.',
   // Publish your business
   publishCta: 'List your business',
   joinHeroTag: 'Your business, its catalog and its location in one place',

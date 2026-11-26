@@ -110,6 +110,9 @@ model Product {
   description   String?
   descriptionEn String?
   price         Float
+  // Stock disponible. null = producto único (se puede comprar 1 sola vez).
+  // N >= 1 = el comprador puede pedir hasta N unidades.
+  stock         Int?
   imageUrl      String?
   sortOrder     Int      @default(0)
   active        Boolean  @default(true)

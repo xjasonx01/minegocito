@@ -44,6 +44,8 @@ export type Product = {
   description: string | null
   descriptionEn: string | null
   price: number
+  /** Stock disponible. null = producto único (se puede comprar 1 sola vez) */
+  stock: number | null
   imageUrl: string | null
   sortOrder: number
   active: boolean
