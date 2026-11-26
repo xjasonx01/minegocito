@@ -145,7 +145,10 @@ function AppShell() {
                   </div>
                 )
               }
-              return <BusinessView business={biz} onBack={() => navigate({ view: 'list' })} />
+              // La key por slug fuerza a remontar la vista al cambiar de
+              // negocio: así el carrito (abierto, confirmación de envío, etc.)
+              // siempre arranca limpio en cada ficha.
+              return <BusinessView key={biz.slug} business={biz} onBack={() => navigate({ view: 'list' })} />
             })()
           )
         ) : route.view === 'join' ? (
