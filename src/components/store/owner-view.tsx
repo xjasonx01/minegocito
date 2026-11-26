@@ -6,8 +6,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ExternalLink, Loader2, Lock, MapPin, Package, Pencil, Plus,
-  Settings2, Store, Trash2,
+  Check, ClipboardList, ExternalLink, Loader2, Lock, MapPin, Package, Pencil, Plus,
+  Settings2, Store, Trash2, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -287,6 +287,9 @@ function OwnerDashboard({
             </CardContent>
           </Card>
 
+          {/* Bandeja de pedidos: los compradores que pulsan "Comprar por WhatsApp" */}
+          <OrdersCard onChanged={reload} toast={toast} t={t} />
+
           {/* Formulario de edición */}
           <BusinessForm
             key={business.id + String(business.updatedAt)}
@@ -324,7 +327,12 @@ function OwnerDashboard({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{p.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatPrice(p.price)} · {p.stock != null ? `${t('stockAvailableLabel')}: ${p.stock}` : t('stockUnique')}
+                        {formatPrice(p.price)} ·{' '}
+                        {p.stock == null
+                          ? t('stockUnique')
+                          : p.stock === 0
+                            ? t('stockSoldOut')
+                            : `${t('stockAvailableLabel')}: ${p.stock}`}
                       </p>
                     </div>
                     {!p.active && <Badge variant="secondary">OFF</Badge>}
@@ -376,6 +384,221 @@ function OwnerDashboard({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+// ---------- Bandeja de pedidos ----------
+// Los pedidos llegan cuando un comprador pulsa "Comprar por WhatsApp":
+// el navegador del comprador los registra en /api/public/orders y aquí
+// el dueño los marca como concretados (descuenta el stock del catálogo)
+// o descartados (no toca el stock).
+type OrderItemRow = { productId: string; name: string; price: number; qty: number }
+
+type OrderRow = {
+  id: string
+  items: string
+  total: number
+  buyerName: string | null
+  buyerNote: string | null
+  status: string
+  createdAt: string
+}
+
+function parseOrderItems(raw: string): OrderItemRow[] {
+  try {
+    const arr = JSON.parse(raw) as unknown
+    if (!Array.isArray(arr)) return []
+    return arr
+      .filter(
+        (i): i is OrderItemRow =>
+          !!i && typeof i === 'object' && typeof (i as OrderItemRow).productId === 'string',
+      )
+      .map((i) => ({
+        productId: i.productId,
+        name: typeof i.name === 'string' ? i.name : '',
+        price: typeof i.price === 'number' ? i.price : 0,
+        qty: Math.max(1, Math.round(Number(i.qty) || 1)),
+      }))
+  } catch {
+    return []
+  }
+}
+
+const ORDER_STATUS_BADGE: Record<string, string> = {
+  pendiente: 'bg-amber-500 text-white hover:bg-amber-500',
+  concretado: 'bg-emerald-600 text-white hover:bg-emerald-600',
+  cancelado: 'bg-muted text-muted-foreground hover:bg-muted',
+}
+
+function OrdersCard({
+  onChanged, toast, t,
+}: {
+  onChanged: () => Promise<void>
+  toast: ReturnType<typeof useToast>['toast']
+  t: (key: Parameters<ReturnType<typeof useLang>['t']>[0]) => string
+}) {
+  const { lang } = useLang()
+  const [orders, setOrders] = useState<OrderRow[] | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [confirmOrder, setConfirmOrder] = useState<OrderRow | null>(null)
+
+  const load = useCallback(async () => {
+    try {
+      const d = await api<{ orders: OrderRow[] }>('/api/owner/orders', 'GET')
+      setOrders(d.orders)
+      setFailed(false)
+    } catch {
+      setFailed(true)
+    }
+  }, [])
+
+  // Primer fetch al montar: setState ocurre solo en los callbacks (tras el
+  // await), nunca de forma síncrona dentro del efecto. `alive` evita pintar
+  // estado si el componente se desmontó antes de la respuesta.
+  useEffect(() => {
+    let alive = true
+    api<{ orders: OrderRow[] }>('/api/owner/orders', 'GET')
+      .then((d) => {
+        if (alive) {
+          setOrders(d.orders)
+          setFailed(false)
+        }
+      })
+      .catch(() => {
+        if (alive) setFailed(true)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  async function mark(id: string, action: 'concretado' | 'cancelado') {
+    if (busyId) return
+    setBusyId(id)
+    try {
+      await api(`/api/owner/orders/${id}`, 'PATCH', { action })
+      toast({ description: action === 'concretado' ? t('orderDoneOk') : t('orderCancelledOk') })
+      setConfirmOrder(null)
+      await load()
+      // Concretar descuenta stock: sincroniza el catálogo y las fichas públicas.
+      if (action === 'concretado') await onChanged()
+    } catch {
+      toast({ description: t('errorSaving'), variant: 'destructive' })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const pendingCount = (orders ?? []).filter((o) => o.status === 'pendiente').length
+
+  return (
+    <Card className="mt-6">
+      <CardContent className="p-6">
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <ClipboardList className="h-5 w-5 text-amber-600" /> {t('ordersTitle')}
+          {pendingCount > 0 && (
+            <Badge className="bg-amber-500 text-white hover:bg-amber-500">{pendingCount}</Badge>
+          )}
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t('ordersHint')}</p>
+
+        <div className="mt-4 space-y-3">
+          {failed && (
+            <p className="py-4 text-center text-sm text-muted-foreground">{t('ordersLoadError')}</p>
+          )}
+          {orders && orders.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">{t('ordersEmpty')}</p>
+          )}
+          {(orders ?? []).map((o) => {
+            const items = parseOrderItems(o.items)
+            const when = new Date(o.createdAt).toLocaleString(lang === 'en' ? 'en-US' : 'es-CU', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })
+            const statusLabel =
+              o.status === 'concretado'
+                ? t('orderStatusDone')
+                : o.status === 'cancelado'
+                  ? t('orderStatusCancelled')
+                  : t('orderStatusPending')
+            return (
+              <div key={o.id} className="rounded-lg border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge className={ORDER_STATUS_BADGE[o.status] ?? ORDER_STATUS_BADGE.cancelado}>
+                      {statusLabel}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{when}</span>
+                  </div>
+                  <span className="text-sm font-bold text-amber-600">{formatPrice(o.total)}</span>
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {items.map((i) => (
+                    <li key={i.productId} className="flex items-baseline justify-between gap-2 text-sm">
+                      <span className="min-w-0 truncate">
+                        {i.qty} × {i.name || t('products')}
+                      </span>
+                      <span className="shrink-0 text-muted-foreground">{formatPrice(i.price * i.qty)}</span>
+                    </li>
+                  ))}
+                </ul>
+                {(o.buyerName || o.buyerNote) && (
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {o.buyerName && (
+                      <span>
+                        {t('orderBuyer')}: {o.buyerName}
+                        {o.buyerNote ? '. ' : ''}
+                      </span>
+                    )}
+                    {o.buyerNote && (
+                      <span>
+                        {t('orderNoteLabel')}: {o.buyerNote}
+                      </span>
+                    )}
+                  </p>
+                )}
+                {o.status === 'pendiente' && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 text-white hover:bg-emerald-700"
+                      disabled={!!busyId}
+                      onClick={() => setConfirmOrder(o)}
+                    >
+                      <Check className="mr-1.5 h-4 w-4" /> {t('orderMarkDone')}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={!!busyId} onClick={() => void mark(o.id, 'cancelado')}>
+                      <X className="mr-1.5 h-4 w-4" /> {t('orderMarkCancelled')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+
+      {/* Confirmación al concretar: es la acción que descuenta el stock */}
+      <AlertDialog open={!!confirmOrder} onOpenChange={(o) => !o && setConfirmOrder(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('orderConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('orderConfirmDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={!!busyId}
+              onClick={() => confirmOrder && void mark(confirmOrder.id, 'concretado')}
+            >
+              {t('orderMarkDone')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   )
 }
 
@@ -647,11 +870,11 @@ function ProductFormDialog({
     setBusy(true)
     try {
       // Normaliza el stock antes de enviarlo: vacío → null (compra única);
-      // número válido → entero >= 1
+      // número válido → entero >= 0 (0 = agotado)
       const n = Math.round(Number(form.stock))
       const payload = {
         ...form,
-        stock: form.stock === '' || !Number.isFinite(n) || n < 1 ? null : n,
+        stock: form.stock === '' || !Number.isFinite(n) || n < 0 ? null : n,
       }
       if (product) {
         await api(`/api/owner/products/${product.id}`, 'PUT', payload)
@@ -691,7 +914,7 @@ function ProductFormDialog({
               <Input
                 id="prod-stock"
                 type="number"
-                min={1}
+                min={0}
                 step={1}
                 inputMode="numeric"
                 value={form.stock}

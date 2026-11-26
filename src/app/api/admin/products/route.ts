@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         description: String(body.description || '').trim() || null,
         descriptionEn: String(body.descriptionEn || '').trim() || null,
         price,
-        stock: stockRaw === null || stockRaw === undefined || stockRaw === '' || !Number.isFinite(stockN) || stockN < 1 ? null : stockN,
+        stock: stockRaw === null || stockRaw === undefined || stockRaw === '' || !Number.isFinite(stockN) || stockN < 0 ? null : stockN,
         imageUrl: String(body.imageUrl || '').trim() || null,
         sortOrder: count + 1,
         active: body.active !== false,

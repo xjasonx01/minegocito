@@ -40,6 +40,7 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
   const [buyerName, setBuyerName] = useState('')
   const [note, setNote] = useState('')
   const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
 
   // Envuelve el cambio de apertura del panel: al reabrir después de un
   // envío se muestra de nuevo el pedido (patrón de handler, sin efectos).
@@ -75,8 +76,40 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
     return lines.join('\n')
   }
 
-  const buy = () => {
-    if (!waNumber || items.length === 0) return
+  // Registra el pedido en la bandeja del dueño (la cantidad y el precio
+  // reales los recalcula el servidor). Con tope de 5 segundos: si la red
+  // está lenta o sin conexión, el envío por WhatsApp no se bloquea — la
+  // bandeja es un extra, el canal de venta sigue siendo WhatsApp.
+  const saveOrder = async (): Promise<void> => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    try {
+      await fetch('/api/public/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
+          buyerName: buyerName.trim() || undefined,
+          buyerNote: note.trim() || undefined,
+        }),
+        signal: controller.signal,
+      })
+    } catch {
+      // Sin registro en la bandeja igual se puede comprar por WhatsApp.
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  const buy = async () => {
+    if (!waNumber || items.length === 0 || busy) return
+    setBusy(true)
+    try {
+      await saveOrder()
+    } finally {
+      setBusy(false)
+    }
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(buildMessage())}`
     window.open(url, '_blank', 'noopener,noreferrer')
     setSent(true)
@@ -134,10 +167,10 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
                 {items.map((item) => {
                   // Stock definido por el dueño para este producto
                   // (si el producto ya no está en el catálogo, no se puede aumentar)
-                  const max =
-                    business.products.find((p) => p.id === item.productId)?.stock ?? item.qty
-                  const maxQty = Math.max(1, max)
+                  const stock = business.products.find((p) => p.id === item.productId)?.stock
+                  const maxQty = Math.max(1, stock ?? item.qty)
                   const atMax = item.qty >= maxQty
+                  const soldOut = stock === 0
                   return (
                     <li key={item.productId} className="rounded-lg border p-3">
                       <div className="flex items-start justify-between gap-2">
@@ -182,7 +215,13 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
                       </div>
                       <div className="mt-1 flex items-end justify-between gap-2">
                         <span className="text-[11px] leading-tight text-muted-foreground">
-                          {maxQty === 1 ? t('stockUniqueHint') : atMax ? t('stockMaxReached') : `${t('stockRemaining')}: ${maxQty - item.qty}`}
+                          {soldOut
+                            ? t('stockSoldOut')
+                            : maxQty === 1
+                              ? t('stockUniqueHint')
+                              : atMax
+                                ? t('stockMaxReached')
+                                : `${t('stockRemaining')}: ${maxQty - item.qty}`}
                         </span>
                         <span className="text-sm font-bold text-amber-600">
                           {formatPrice(item.price * item.qty)}
@@ -221,7 +260,8 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
                 <Button
                   size="lg"
                   className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
-                  onClick={buy}
+                  onClick={() => void buy()}
+                  disabled={busy}
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {t('cartBuyWhatsapp')}

@@ -223,14 +223,17 @@ function ProductCard({
   const inCart = qty > 0
   const maxQty = Math.max(1, product.stock ?? 1)
   const atMax = qty >= maxQty
+  const soldOut = product.stock === 0
   const remaining = Math.max(0, maxQty - qty)
 
   // Texto de disponibilidad según el estado
-  const stockHint = maxQty === 1
-    ? t('stockUnique')
-    : inCart
-      ? (remaining > 0 ? `${t('stockRemaining')}: ${remaining}` : t('stockMaxReached'))
-      : `${t('stockAvailableLabel')}: ${maxQty}`
+  const stockHint = soldOut
+    ? t('stockSoldOut')
+    : maxQty === 1
+      ? t('stockUnique')
+      : inCart
+        ? (remaining > 0 ? `${t('stockRemaining')}: ${remaining}` : t('stockMaxReached'))
+        : `${t('stockAvailableLabel')}: ${maxQty}`
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
@@ -287,6 +290,10 @@ function ProductCard({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+          ) : soldOut ? (
+            <Button size="sm" variant="outline" disabled className="opacity-60">
+              {t('stockSoldOut')}
+            </Button>
           ) : (
             <Button
               size="sm"

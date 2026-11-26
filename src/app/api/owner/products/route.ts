@@ -5,12 +5,13 @@ import { requireOwnerWithBusiness } from '@/lib/owner-api'
 export const dynamic = 'force-dynamic'
 
 // Stock opcional: null/vacío = producto único (se compra 1 sola vez);
-// número >= 1 = unidades disponibles. Se normaliza aquí para que nunca
-// llegue un 0 u otro valor inválido a la base de datos.
+// número >= 0 = unidades disponibles (0 = agotado, p. ej. tras vender la
+// última unidad o escribir 0 a mano). Se normaliza aquí para que nunca
+// llegue otro valor inválido a la base de datos.
 function parseStock(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   const n = Math.round(Number(value))
-  if (!Number.isFinite(n) || n < 1) return null
+  if (!Number.isFinite(n) || n < 0) return null
   return n
 }
 
