@@ -23,6 +23,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.name !== undefined) data.name = String(body.name).trim().slice(0, 120)
     if (body.description !== undefined) data.description = String(body.description).trim().slice(0, 1000) || null
     if (body.price !== undefined) data.price = Math.max(0, Number(body.price) || 0)
+    if (body.stock !== undefined) {
+      // null/vacío = producto único; número >= 1 = unidades disponibles
+      const n = Math.round(Number(body.stock))
+      data.stock = body.stock === null || body.stock === '' || !Number.isFinite(n) || n < 1 ? null : n
+    }
     if (body.imageUrl !== undefined) data.imageUrl = String(body.imageUrl).trim().slice(0, 500_000) || null
     if (body.active !== undefined) data.active = !!body.active
     const product = await db.product.update({ where: { id }, data })

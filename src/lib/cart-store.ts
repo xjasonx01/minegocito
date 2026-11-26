@@ -78,21 +78,25 @@ export const cartStore = {
     return {}
   },
 
-  /** Agrega un producto (o suma cantidad si ya estaba en el carrito) */
-  add(businessId: string, item: Omit<CartItem, 'qty'>, qty = 1) {
+  /** Agrega un producto (o suma cantidad si ya estaba en el carrito).
+   *  Si se pasa `max`, la cantidad queda limitada al stock disponible. */
+  add(businessId: string, item: Omit<CartItem, 'qty'>, qty = 1, max?: number) {
     const cart = readCart()
     const items = [...(cart[businessId] ?? [])]
     const idx = items.findIndex((i) => i.productId === item.productId)
     if (idx >= 0) {
-      items[idx] = { ...items[idx], qty: items[idx].qty + qty }
+      const target = items[idx].qty + Math.max(1, qty)
+      items[idx] = { ...items[idx], qty: max != null ? Math.min(target, max) : target }
     } else {
-      items.push({ ...item, qty: Math.max(1, qty) })
+      const target = Math.max(1, qty)
+      items.push({ ...item, qty: max != null ? Math.min(target, Math.max(1, max)) : target })
     }
     writeCart({ ...cart, [businessId]: items })
   },
 
-  /** Cambia la cantidad de un producto; con qty <= 0 lo elimina */
-  setQty(businessId: string, productId: string, qty: number) {
+  /** Cambia la cantidad de un producto; con qty <= 0 lo elimina.
+   *  Si se pasa `max`, la cantidad queda limitada al stock disponible. */
+  setQty(businessId: string, productId: string, qty: number, max?: number) {
     const cart = readCart()
     const current = cart[businessId] ?? []
     if (!current.some((i) => i.productId === productId)) return
@@ -100,8 +104,10 @@ export const cartStore = {
       cartStore.remove(businessId, productId)
       return
     }
+    const target = Math.round(qty)
+    const capped = max != null ? Math.min(target, max) : target
     const items = current.map((i) =>
-      i.productId === productId ? { ...i, qty: Math.round(qty) } : i,
+      i.productId === productId ? { ...i, qty: Math.max(1, capped) } : i,
     )
     writeCart({ ...cart, [businessId]: items })
   },
@@ -131,8 +137,8 @@ export type CartSummary = {
   total: number
   /** Cantidad actual de un producto concreto */
   qtyOf: (productId: string) => number
-  add: (item: Omit<CartItem, 'qty'>, qty?: number) => void
-  setQty: (productId: string, qty: number) => void
+  add: (item: Omit<CartItem, 'qty'>, qty?: number, max?: number) => void
+  setQty: (productId: string, qty: number, max?: number) => void
   remove: (productId: string) => void
   clear: () => void
 }
@@ -147,11 +153,11 @@ export function useCart(businessId: string): CartSummary {
   const items = state[businessId] ?? []
 
   const add = useCallback(
-    (item: Omit<CartItem, 'qty'>, qty = 1) => cartStore.add(businessId, item, qty),
+    (item: Omit<CartItem, 'qty'>, qty = 1, max?: number) => cartStore.add(businessId, item, qty, max),
     [businessId],
   )
   const setQty = useCallback(
-    (productId: string, qty: number) => cartStore.setQty(businessId, productId, qty),
+    (productId: string, qty: number, max?: number) => cartStore.setQty(businessId, productId, qty, max),
     [businessId],
   )
   const remove = useCallback(

@@ -323,7 +323,9 @@ function OwnerDashboard({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatPrice(p.price)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatPrice(p.price)} · {p.stock != null ? `${t('stockAvailableLabel')}: ${p.stock}` : t('stockUnique')}
+                      </p>
                     </div>
                     {!p.active && <Badge variant="secondary">OFF</Badge>}
                     <Button variant="outline" size="sm" onClick={() => setProductDialog({ open: true, editing: p })} aria-label={t('edit')}>
@@ -625,10 +627,12 @@ function ProductFormDialog({
   t: (key: Parameters<ReturnType<typeof useLang>['t']>[0]) => string
 }) {
   const [busy, setBusy] = useState(false)
+  // Stock como texto: vacío = producto único (null); número >= 1 = unidades
   const [form, setForm] = useState(() => ({
     name: product?.name ?? '',
     description: product?.description ?? '',
     price: product?.price ?? 0,
+    stock: product?.stock != null ? String(product.stock) : '',
     imageUrl: product?.imageUrl ?? '',
     active: product?.active ?? true,
   }))
@@ -642,10 +646,17 @@ function ProductFormDialog({
     }
     setBusy(true)
     try {
+      // Normaliza el stock antes de enviarlo: vacío → null (compra única);
+      // número válido → entero >= 1
+      const n = Math.round(Number(form.stock))
+      const payload = {
+        ...form,
+        stock: form.stock === '' || !Number.isFinite(n) || n < 1 ? null : n,
+      }
       if (product) {
-        await api(`/api/owner/products/${product.id}`, 'PUT', form)
+        await api(`/api/owner/products/${product.id}`, 'PUT', payload)
       } else {
-        await api('/api/owner/products', 'POST', form)
+        await api('/api/owner/products', 'POST', payload)
       }
       await onSaved()
     } catch {
@@ -675,12 +686,26 @@ function ProductFormDialog({
               <Label htmlFor="prod-price">{t('productPrice')} *</Label>
               <Input id="prod-price" type="number" min={0} step={1} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="prod-stock">{t('ownerStockLabel')}</Label>
+              <Input
+                id="prod-stock"
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                value={form.stock}
+                onChange={(e) => setForm({ ...form, stock: e.target.value.replace(/[^0-9]/g, '') })}
+                placeholder={t('ownerStockPh')}
+              />
+            </div>
             <div className="flex items-end pb-1">
               <label className="flex items-center gap-2 text-sm font-medium">
                 <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} /> {t('activeLabel')}
               </label>
             </div>
           </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t('ownerStockHint')}</p>
           <ImageUpload label={t('productImage')} value={form.imageUrl} onChange={(v) => setForm({ ...form, imageUrl: v })} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>{t('cancel')}</Button>

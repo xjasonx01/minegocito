@@ -205,7 +205,8 @@ export function BusinessView({ business, onBack }: Props) {
 }
 
 // Tarjeta de producto con control para agregar al carrito (o ajustar la
-// cantidad si ya está agregado).
+// cantidad si ya está agregado). La cantidad nunca supera el stock que el
+// dueño definió; si no definió stock, el producto es único (máximo 1).
 function ProductCard({
   product,
   qty,
@@ -214,12 +215,22 @@ function ProductCard({
 }: {
   product: Product
   qty: number
-  onAdd: (item: { productId: string; name: string; price: number }, qty?: number) => void
-  onSetQty: (productId: string, qty: number) => void
+  onAdd: (item: { productId: string; name: string; price: number }, qty?: number, max?: number) => void
+  onSetQty: (productId: string, qty: number, max?: number) => void
 }) {
   const { lang, t } = useLang()
   const name = pick(lang, product.name, product.nameEn)
   const inCart = qty > 0
+  const maxQty = Math.max(1, product.stock ?? 1)
+  const atMax = qty >= maxQty
+  const remaining = Math.max(0, maxQty - qty)
+
+  // Texto de disponibilidad según el estado
+  const stockHint = maxQty === 1
+    ? t('stockUnique')
+    : inCart
+      ? (remaining > 0 ? `${t('stockRemaining')}: ${remaining}` : t('stockMaxReached'))
+      : `${t('stockAvailableLabel')}: ${maxQty}`
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
@@ -247,8 +258,9 @@ function ProductCard({
             {pick(lang, product.description, product.descriptionEn)}
           </p>
         )}
-        {/* Agregar al carrito / ajustar cantidad */}
-        <div className="flex items-center justify-end pt-2 mt-auto">
+        {/* Agregar al carrito / ajustar cantidad, con tope de stock */}
+        <div className="flex items-center justify-between gap-2 pt-2 mt-auto">
+          <span className="text-xs text-muted-foreground">{stockHint}</span>
           {inCart ? (
             <div
               className="flex items-center gap-1 rounded-full border border-amber-500/60 bg-amber-500/10 p-1"
@@ -258,7 +270,7 @@ function ProductCard({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 rounded-full hover:bg-amber-500/20"
-                onClick={() => onSetQty(product.id, qty - 1)}
+                onClick={() => onSetQty(product.id, qty - 1, maxQty)}
                 aria-label={t('cartDecrease')}
               >
                 <Minus className="h-4 w-4" />
@@ -268,8 +280,9 @@ function ProductCard({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 rounded-full hover:bg-amber-500/20"
-                onClick={() => onSetQty(product.id, qty + 1)}
-                aria-label={t('cartIncrease')}
+                onClick={() => onSetQty(product.id, qty + 1, maxQty)}
+                disabled={atMax}
+                aria-label={atMax ? t('stockMaxReached') : t('cartIncrease')}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -279,7 +292,7 @@ function ProductCard({
               size="sm"
               variant="outline"
               className="border-amber-600 font-semibold text-amber-700 hover:bg-amber-500 hover:text-white dark:border-amber-500 dark:text-amber-400 dark:hover:bg-amber-500 dark:hover:text-white"
-              onClick={() => onAdd({ productId: product.id, name, price: product.price })}
+              onClick={() => onAdd({ productId: product.id, name, price: product.price }, 1, maxQty)}
             >
               <Plus className="mr-1 h-4 w-4" /> {t('addToCart')}
             </Button>

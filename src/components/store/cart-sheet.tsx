@@ -131,52 +131,66 @@ export function CartSheet({ business, open, onOpenChange }: Props) {
             {/* Lista de productos del pedido */}
             <div className="flex-1 overflow-y-auto px-4 py-3">
               <ul className="space-y-3">
-                {items.map((item) => (
-                  <li key={item.productId} className="rounded-lg border p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-sm font-semibold leading-snug">{item.name}</span>
-                      <button
-                        type="button"
-                        className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => remove(item.productId)}
-                        aria-label={`${t('cartRemove')}: ${item.name}`}
-                        title={t('cartRemove')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {formatPrice(item.price)} × {item.qty}
-                      </span>
-                      {/* Control de cantidad */}
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setQty(item.productId, item.qty - 1)}
-                          aria-label={t('cartDecrease')}
+                {items.map((item) => {
+                  // Stock definido por el dueño para este producto
+                  // (si el producto ya no está en el catálogo, no se puede aumentar)
+                  const max =
+                    business.products.find((p) => p.id === item.productId)?.stock ?? item.qty
+                  const maxQty = Math.max(1, max)
+                  const atMax = item.qty >= maxQty
+                  return (
+                    <li key={item.productId} className="rounded-lg border p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-semibold leading-snug">{item.name}</span>
+                        <button
+                          type="button"
+                          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => remove(item.productId)}
+                          aria-label={`${t('cartRemove')}: ${item.name}`}
+                          title={t('cartRemove')}
                         >
-                          <Minus className="h-3.5 w-3.5" />
-                        </Button>
-                        <span className="w-8 text-center text-sm font-bold">{item.qty}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setQty(item.productId, item.qty + 1)}
-                          aria-label={t('cartIncrease')}
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </Button>
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                    </div>
-                    <div className="mt-1 text-right text-sm font-bold text-amber-600">
-                      {formatPrice(item.price * item.qty)}
-                    </div>
-                  </li>
-                ))}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatPrice(item.price)} × {item.qty}
+                        </span>
+                        {/* Control de cantidad, con tope de stock */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setQty(item.productId, item.qty - 1, maxQty)}
+                            aria-label={t('cartDecrease')}
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </Button>
+                          <span className="w-8 text-center text-sm font-bold">{item.qty}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setQty(item.productId, item.qty + 1, maxQty)}
+                            disabled={atMax}
+                            aria-label={atMax ? t('stockMaxReached') : t('cartIncrease')}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-1 flex items-end justify-between gap-2">
+                        <span className="text-[11px] leading-tight text-muted-foreground">
+                          {maxQty === 1 ? t('stockUniqueHint') : atMax ? t('stockMaxReached') : `${t('stockRemaining')}: ${maxQty - item.qty}`}
+                        </span>
+                        <span className="text-sm font-bold text-amber-600">
+                          {formatPrice(item.price * item.qty)}
+                        </span>
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
 
               {/* Datos opcionales del comprador */}
