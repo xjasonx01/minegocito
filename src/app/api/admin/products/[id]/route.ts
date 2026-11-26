@@ -17,9 +17,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.descriptionEn !== undefined) data.descriptionEn = String(body.descriptionEn).trim() || null
     if (body.price !== undefined) data.price = Number(body.price) || 0
     if (body.stock !== undefined) {
-      // null/vacío = producto único; número >= 1 = unidades disponibles
+      // null/vacío = producto único; número >= 0 = unidades disponibles (0 = agotado)
       const n = Math.round(Number(body.stock))
-      data.stock = body.stock === null || body.stock === '' || !Number.isFinite(n) || n < 1 ? null : n
+      data.stock = body.stock === null || body.stock === '' || !Number.isFinite(n) || n < 0 ? null : n
     }
     if (body.imageUrl !== undefined) data.imageUrl = String(body.imageUrl).trim() || null
     if (body.sortOrder !== undefined) data.sortOrder = Number(body.sortOrder) || 0

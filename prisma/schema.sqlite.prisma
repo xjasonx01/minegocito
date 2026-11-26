@@ -98,7 +98,8 @@ model Business {
   category Category @relation(fields: [categoryId], references: [id])
   municipality Municipality @relation(fields: [municipalityId], references: [id])
   products Product[]
-  owner    OwnerUser?
+  orders  Order[]
+  owner   OwnerUser?
 }
 
 model Product {
@@ -115,6 +116,24 @@ model Product {
   imageUrl      String?
   sortOrder     Int      @default(0)
   active        Boolean  @default(true)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  businessId String
+  // Copia (snapshot) de los productos pedidos: [{ productId, name, price, qty }]
+  // en JSON. Guarda nombre y precio del momento del pedido, aunque el dueño
+  // cambie después el catálogo.
+  items      String
+  total      Float
+  buyerName  String?
+  buyerNote  String?
+  // pendiente | concretado | cancelado
+  status     String   @default("pendiente")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }

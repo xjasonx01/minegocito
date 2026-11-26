@@ -42,8 +42,59 @@ async function ensureBusinessColumns() {
     ['telegramGroup', 'TEXT'],
   ]
   await ensureColumns('Business', columns, isPostgres)
-  // Stock de productos (null = producto único, se compra 1 sola vez).
+  // Stock de productos (null = producto único, se compra 1 sola vez;
+  // 0 = agotado). Se añade de forma idempotente igual que las demás columnas.
   await ensureColumns('Product', [['stock', 'INTEGER']], isPostgres)
+  // Tabla Order (bandeja de pedidos del dueño). Igual que las columnas
+  // nuevas, se crea sin pasos manuales de migración al desplegar.
+  await ensureOrderTable(isPostgres)
+}
+
+// Crea la tabla "Order" si todavía no existe (despliegues sobre bases ya
+// creadas con versiones anteriores). El DDL replica el que generaría
+// `prisma db push`, así que las dos vías son intercambiables.
+async function ensureOrderTable(isPostgres: boolean) {
+  if (isPostgres) {
+    await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "Order" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "businessId" TEXT NOT NULL,
+      "items" TEXT NOT NULL,
+      "total" DOUBLE PRECISION NOT NULL,
+      "buyerName" TEXT,
+      "buyerNote" TEXT,
+      "status" TEXT NOT NULL DEFAULT 'pendiente',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`)
+    // La clave foránea se añade aparte: CREATE TABLE IF NOT EXISTS no la
+    // garantiza si la tabla ya existía de un intento anterior.
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE "Order" ADD CONSTRAINT "Order_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE`)
+    } catch (e) {
+      const msg = String((e as { message?: string })?.message || e)
+      if (!msg.toLowerCase().includes('already exists')) throw e
+    }
+    await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Order_businessId_idx" ON "Order"("businessId")`)
+  } else {
+    try {
+      await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "Order" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "businessId" TEXT NOT NULL,
+        "items" TEXT NOT NULL,
+        "total" REAL NOT NULL,
+        "buyerName" TEXT,
+        "buyerNote" TEXT,
+        "status" TEXT NOT NULL DEFAULT 'pendiente',
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "Order_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )`)
+      await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Order_businessId_idx" ON "Order"("businessId")`)
+    } catch (e) {
+      const msg = String((e as { message?: string })?.message || e)
+      if (!msg.toLowerCase().includes('already exists')) throw e
+    }
+  }
 }
 
 async function ensureColumns(table: string, columns: Array<[string, string]>, isPostgres: boolean) {
